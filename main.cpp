@@ -44,7 +44,7 @@ int main()
 	namedWindow("output", WINDOW_AUTOSIZE);
 
 	int th_val = 75;
-	createTrackbar("", "output", &th_val, 255, process);
+	createTrackbar("Threshold", "output", &th_val, 255, process);
 
 	waitKey(0);
 	return 0;
