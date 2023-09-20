@@ -6,51 +6,76 @@
 using namespace cv;
 using namespace std;
 
-void demo1(void) {
-	Mat image = Mat::zeros(300, 600, CV_8UC3);
-	circle(image, Point(250, 150), 100, Scalar(0, 255, 128), -100);
-	circle(image, Point(350, 150), 100, Scalar(255, 255, 255), -100);
-	imshow("Circles", image);
-}
+Mat inp;
 
-void demo2(void) 
+static void process(int th_val, void* usr_data)
 {
-	std::string path = "images/image1.jpeg";
-	Mat img1 = imread(path, IMREAD_COLOR);
-	imshow("Color", img1);
+	Mat bin;
+	threshold(inp, bin, th_val, 255, THRESH_BINARY);
+	imshow("04 bin", bin);
 
-	Mat img2 = imread(path, IMREAD_GRAYSCALE);
-	imshow("Gray Scale", img2);
-}
+	Mat flood = bin.clone();
+	floodFill(flood, cv::Point(0, 0), Scalar(255));
+	imshow("05 flood", flood);
 
-void demo3(void)
-{
-	//** Read an image from file
-	std::string path = "images/image2.png";
-	Mat img1 = imread(path, IMREAD_COLOR);
-	imshow("Image1", img1);
+	Mat flood_inv;
+	bitwise_not(flood, flood_inv);
+	imshow("06 flood_inv", flood_inv);
 
-	//** Clone image
-	Mat img2 = img1.clone();
-
-	//** Resize image
-	resize(img2, img2, cv::Size(img2.size().width/2., img2.size().height / 2));
-	imshow("Image2", img2);
-
-	//** Convert to gray scale
-	Mat img3;
-	cvtColor(img2, img3, COLOR_BGR2GRAY);
-	imshow("Image3", img3);
-
-	//** Canny edge detection
-	Mat img4;
-	Canny(img3, img4, 128, 128);
-	imshow("Image4", img4);
+	Mat output = (bin | flood_inv);
+	imshow("output", output);
 }
 
 int main()
 {
-	demo3();
+	string path = "images/coins.jpg";
+	Mat src = imread(path, IMREAD_COLOR);
+	imshow("01 original", src);
+
+	Mat gry;
+	cvtColor(src, gry, COLOR_BGR2GRAY);
+	imshow("02 gray", gry);
+
+	Mat blr;
+	blur(gry, inp, Size(8, 8));
+	imshow("03 blur", inp);
+
+
+	namedWindow("output", WINDOW_AUTOSIZE);
+
+	int th_val = 75;
+	createTrackbar("", "output", &th_val, 255, process);
+
 	waitKey(0);
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+Canny(dst, dst, th_val, th_val * 2);
+
+vector<vector<Point> > contours;
+vector<Vec4i> hierarchy;
+findContours(dst, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+
+Mat drawing = Mat::zeros(dst.size(), CV_8UC3);
+RNG rng(123);
+for (size_t i = 0; i < contours.size(); i++)
+{
+	Scalar color = Scalar(rng.uniform(0, 256), rng.uniform(0, 256), rng.uniform(0, 256));
+	drawContours(drawing, contours, (int)i, color, 2, LINE_8, hierarchy, 0);
+}
+imshow("output", drawing);
+*/
